@@ -1,35 +1,53 @@
 package com.example.imagecapture;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.hardware.camera2.CaptureRequest;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.view.Display;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
+import android.view.WindowManager;
+import android.widget.GridView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
 
-   static final int REQUEST_IMAGE_CAPTURE=1;
-    ImageView imageView;
-    Button capture,btn_save;
+    //Rohits change
+    private static final int MY_READ_PERMISSION_CODE = 101;
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
 
-    BitmapDrawable drawable;
-    Bitmap bitmap;
+
+    FloatingActionButton capture_floatingBtn;
+    GridView gridView;
+
+  //  BitmapDrawable drawable;
+  //  Bitmap bitmap;
+
+ //   private File sdcard;
+  //  private File directory;
+
+    private ArrayList<String> listOfAllImages = new ArrayList<>();
 
 
     @Override
@@ -37,34 +55,58 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        imageView=(ImageView)findViewById(R.id.imageView);
-        capture=(Button)findViewById(R.id.capture);
-        btn_save=(Button)findViewById(R.id.btn_save);
 
-        btn_save.setOnClickListener(new View.OnClickListener() {
+        capture_floatingBtn = findViewById(R.id.capture_floatingBtn);
+        gridView = findViewById(R.id.gridView);
+
+       //  sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        // directory = new File(sdcard.getAbsolutePath() + "/mypic");
+        // directory.mkdirs();
+
+
+
+
+        if (!hasCamera()) {
+            capture_floatingBtn.setEnabled(false);
+            Toast.makeText(this, "Sorry!! Your device doesn't have camera, could not capture images", Toast.LENGTH_SHORT).show();
+        }
+
+
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_READ_PERMISSION_CODE);
+
+        } else {
+            loadImages();
+        }
+
+
+     /*   btn_save.setOnClickListener(new View.OnClickListener() {
             @Override
-
-
             public void onClick(View v) {
 
-                drawable=(BitmapDrawable)imageView.getDrawable();
-                bitmap=drawable.getBitmap();
+                drawable = (BitmapDrawable) imageView.getDrawable();
+                bitmap = drawable.getBitmap();
+                FileOutputStream fileOutputStream = null;
+               // File sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 
-                FileOutputStream fileOutputStream=null;
-                File sdcard= Environment.getExternalStorageDirectory();
-                File directory=new File(sdcard.getAbsolutePath()+ "/mypic" );
-                directory.mkdir();
-                String filename=String.format("%d.jpg",System.currentTimeMillis());
-                File outFile=new File(directory,filename);
+               // File directory = new File(sdcard.getAbsolutePath() + "/mypic");
+                //directory.mkdirs();
+
+                String filename = String.format("%d.jpg", System.currentTimeMillis());
+                File outFile = new File(directory, filename);
+
 
                 try {
-                    fileOutputStream=new FileOutputStream(outFile);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100,fileOutputStream);
+                    outFile.createNewFile();
+                    fileOutputStream = new FileOutputStream(outFile);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
                     fileOutputStream.flush();
                     fileOutputStream.close();
 
-
-                    Intent intent=new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     intent.setData(Uri.fromFile(outFile));
                     sendBroadcast(intent);
 
@@ -74,38 +116,87 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-
             }
-        });
+        });*/
 
 
+    }//onCreate Ends here
 
 
-        if(! hascamera()){
-            capture.setEnabled(false);
-        }
-
-
-
-    }
-    public boolean hascamera(){
-        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) ;
+    private void loadImages() {
+        listOfAllImages = GetImages.getListImages(this);
+        gridView.setAdapter(new ImageGridViewAdapter(this, listOfAllImages));
     }
 
-    public void captureimg(View view){
 
-        Intent intent=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-         startActivityForResult(intent,REQUEST_IMAGE_CAPTURE);
+
+    public boolean hasCamera() {
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
     }
+
+
+
+    public void captureImg(View view) {
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-     if(requestCode==REQUEST_IMAGE_CAPTURE && resultCode==RESULT_OK)
-     {
-         Bundle extras=data.getExtras();
-         Bitmap photo=(Bitmap)extras.get("data");
-         imageView.setImageBitmap(photo);
+        super.onActivityResult(requestCode, resultCode, data);
 
-     }
-    }
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap bitmap = (Bitmap) extras.get("data");
+
+            FileOutputStream fileOutputStream = null;
+            File sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            File directory = new File(sdcard.getAbsolutePath() + "/mypic");
+            directory.mkdirs();
+            //sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+            String filename = String.format("%d.jpg", System.currentTimeMillis());
+            File outFile = new File(directory, filename);
+
+
+            try {
+               // outFile.createNewFile();
+                fileOutputStream = new FileOutputStream(outFile);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
+                fileOutputStream.flush();
+                fileOutputStream.close();
+
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(Uri.fromFile(outFile));
+                sendBroadcast(intent);
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        }
+    }//onActivityResults Ends here
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(requestCode == MY_READ_PERMISSION_CODE) {
+
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
+                loadImages();
+            }
+            else {
+
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }//onRequestPermissionResult Ends here
 }
