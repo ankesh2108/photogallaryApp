@@ -1,16 +1,16 @@
 package com.example.imagecapture;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.widget.AdapterView;
 
 import java.util.ArrayList;
 
 public class GetImages {
 
 
-    public static ArrayList<String> getListImages(Context context) {
+    public static ArrayList<String> getListImages(MainActivity context) {
 
         ArrayList<String> imagesList = new ArrayList<>();
         Uri uri;

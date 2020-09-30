@@ -13,11 +13,15 @@ import java.util.ArrayList;
 
 public class ImageGridViewAdapter extends BaseAdapter {
 
-    private ArrayList<String> listOfImages;
-    private Context mContext;
+    public ArrayList<String> listOfImages;
+    public Context mContext;
 
     public ImageGridViewAdapter(Context mContext, ArrayList<String> listOfImages) {
         this.listOfImages = listOfImages;
+        this.mContext = mContext;
+    }
+
+    public ImageGridViewAdapter(Context mContext) {
         this.mContext = mContext;
     }
 
@@ -27,7 +31,7 @@ public class ImageGridViewAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
+     public  Object getItem(int position) {
         return position;
     }
 

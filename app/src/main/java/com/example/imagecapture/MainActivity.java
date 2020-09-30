@@ -1,5 +1,5 @@
 package com.example.imagecapture;
-
+import  com.example.imagecapture.ImageGridViewAdapter;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +13,7 @@ import android.provider.MediaStore;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -63,7 +64,15 @@ public class MainActivity extends AppCompatActivity {
         // directory = new File(sdcard.getAbsolutePath() + "/mypic");
         // directory.mkdirs();
 
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+Intent intent=new Intent(getApplicationContext(),click_item.class);
+intent.putExtra("id",position);
+startActivity(intent);
 
+           }
+        });
 
 
         if (!hasCamera()) {
