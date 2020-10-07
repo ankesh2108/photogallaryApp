@@ -1,6 +1,7 @@
 package com.example.imagecapture;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -36,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton capture_floatingBtn;
     GridView gridView;
 
+
+    ContentValues values;
+    Uri imageUri;
     //  BitmapDrawable drawable;
     //  Bitmap bitmap;
 
@@ -138,7 +142,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void captureImg(View view) {
 
+        /////////////////////////  This code is helping to get full sized image
+        values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, "New Picture");
+        values.put(MediaStore.Images.Media.DESCRIPTION, "From your Camera");
+        imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        ////////////////////////////////////////////////////////////////////////////////
+
+
+        // Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
 
 
@@ -158,8 +172,18 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
-            Bundle extras = data.getExtras();
-            Bitmap bitmap = (Bitmap) extras.get("data");
+
+            /////////////////////////  This code is helping to get full sized image
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            /////////////////////////////////////////////////////////////////////////////
+
+            //   Bundle extras = data.getExtras();
+            //  Bitmap bitmap = (Bitmap) extras.get("data");
 
             FileOutputStream fileOutputStream = null;
             File sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -168,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
 
             String filename = String.format("%d.jpg", System.currentTimeMillis());
             File outFile = new File(directory, filename);
+
 
             try {
                 // outFile.createNewFile();
