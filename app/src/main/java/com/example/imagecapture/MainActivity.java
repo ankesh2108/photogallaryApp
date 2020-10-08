@@ -2,6 +2,7 @@ package com.example.imagecapture;
 
 import android.Manifest;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -19,6 +20,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.AsyncTaskLoader;
+import androidx.loader.content.Loader;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -38,12 +42,11 @@ public class MainActivity extends AppCompatActivity {
     GridView gridView;
 
 
-    ContentValues values;
-    Uri imageUri;
+    private ContentValues values;
+    private Uri imageUri;
     //  BitmapDrawable drawable;
     //  Bitmap bitmap;
-
-    //   private File sdcard;
+    //  private File sdcard;
     //  private File directory;
 
     private ArrayList<String> listOfAllImages = new ArrayList<>();
@@ -61,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
         //  sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         // directory = new File(sdcard.getAbsolutePath() + "/mypic");
         // directory.mkdirs();
-
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -88,49 +90,33 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-     /*   btn_save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                drawable = (BitmapDrawable) imageView.getDrawable();
-                bitmap = drawable.getBitmap();
-                FileOutputStream fileOutputStream = null;
-               // File sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-
-               // File directory = new File(sdcard.getAbsolutePath() + "/mypic");
-                //directory.mkdirs();
-
-                String filename = String.format("%d.jpg", System.currentTimeMillis());
-                File outFile = new File(directory, filename);
-
-
-                try {
-                    outFile.createNewFile();
-                    fileOutputStream = new FileOutputStream(outFile);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream);
-                    fileOutputStream.flush();
-                    fileOutputStream.close();
-
-                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                    intent.setData(Uri.fromFile(outFile));
-                    sendBroadcast(intent);
-
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });*/
-
-
     }//onCreate Ends here
 
 
-    private void loadImages() {
-        listOfAllImages = GetImages.getListImages(this);
-        imageGridViewAdapter = new ImageGridViewAdapter(this, listOfAllImages);
+    /*public static class GetListOfImgInBackground extends AsyncTaskLoader {
+
+        MainActivity context;
+        public GetListOfImgInBackground(@NonNull MainActivity context) {
+            super(context);
+            this.context = context;
+        }
+
+        @Nullable
+        @Override
+        public Object loadInBackground() {
+            context.listOfAllImages = GetImages.getListImages(context);
+            context.imageGridViewAdapter = new ImageGridViewAdapter(context, context.listOfAllImages);
+            context.gridView.setAdapter(context.imageGridViewAdapter);
+            return null;
+        }
+    }*/
+
+
+
+    public void loadImages() {
+
+       listOfAllImages = GetImages.getListImages(this);
+       imageGridViewAdapter = new ImageGridViewAdapter(this, listOfAllImages);
         gridView.setAdapter(imageGridViewAdapter);
     }
 
@@ -158,20 +144,23 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
+   /* @Override
     protected void onResume() {
-        super.onResume();
+        System.out.println("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
         listOfAllImages = GetImages.getListImages(this);
         imageGridViewAdapter.setImageList(listOfAllImages);
         imageGridViewAdapter.notifyDataSetChanged();
-    }
+        System.out.println("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
+        super.onResume();
+
+    }*/
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-
 
             /////////////////////////  This code is helping to get full sized image
             Bitmap bitmap = null;
@@ -184,12 +173,10 @@ public class MainActivity extends AppCompatActivity {
 
             //   Bundle extras = data.getExtras();
             //  Bitmap bitmap = (Bitmap) extras.get("data");
-
             FileOutputStream fileOutputStream = null;
             File sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
             File directory = new File(sdcard.getAbsolutePath() + "/mypic");
             directory.mkdirs();
-
             String filename = String.format("%d.jpg", System.currentTimeMillis());
             File outFile = new File(directory, filename);
 
@@ -209,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
 
         }
 
