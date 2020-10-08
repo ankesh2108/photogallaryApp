@@ -9,7 +9,7 @@ import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.bumptech.glide.Glide;
+import com.ablanco.zoomy.Zoomy;
 
 public class ClickItemHandler extends AppCompatActivity {
     ImageView img;
@@ -26,15 +26,16 @@ public class ClickItemHandler extends AppCompatActivity {
 
 
         Bitmap bitmap = BitmapFactory.decodeFile(ImageGridViewAdapter.getItemAtPosition(position));
-        //  img.setImageBitmap(bitmap);
+        //img.setImageBitmap(bitmap);
 
         Uri uri = Uri.parse(ImageGridViewAdapter.getItemAtPosition(position));
         img.setImageURI(uri);
 
 
-        //   Glide.with(this).load(uri).into(img);
+        //It is used for pinch to zoom on image
+        Zoomy.Builder builder = new Zoomy.Builder(this).target(img);
+        builder.register();
 
-
-
+        //Glide.with(this).load(uri).into(img);
     }
 }
