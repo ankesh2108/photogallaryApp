@@ -2,17 +2,18 @@ package com.example.imagecapture;
 
 import android.Manifest;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,9 +21,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.AsyncTaskLoader;
-import androidx.loader.content.Loader;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -40,10 +38,12 @@ public class MainActivity extends AppCompatActivity {
 
     FloatingActionButton capture_floatingBtn;
     GridView gridView;
+    TextView loading_textView;
 
 
     private ContentValues values;
     private Uri imageUri;
+
     //  BitmapDrawable drawable;
     //  Bitmap bitmap;
     //  private File sdcard;
@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
         capture_floatingBtn = findViewById(R.id.capture_floatingBtn);
         gridView = findViewById(R.id.gridView);
+        loading_textView = findViewById(R.id.loading_textview);
 
         //  sdcard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         // directory = new File(sdcard.getAbsolutePath() + "/mypic");
@@ -86,44 +87,60 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     MY_READ_PERMISSION_CODE);
         } else {
-            loadImages();
+            //  loadImages();
+            new GetListOfImgInBackground(this).execute();
         }
 
 
     }//onCreate Ends here
 
 
-    /*public static class GetListOfImgInBackground extends AsyncTaskLoader {
+    private static class GetListOfImgInBackground extends AsyncTask<Void, Void, Void> {
 
-        MainActivity context;
-        public GetListOfImgInBackground(@NonNull MainActivity context) {
-            super(context);
-            this.context = context;
+        MainActivity mainActivity;
+
+        public GetListOfImgInBackground(@NonNull MainActivity mainActivity) {
+            this.mainActivity = mainActivity;
         }
 
-        @Nullable
+
         @Override
-        public Object loadInBackground() {
-            context.listOfAllImages = GetImages.getListImages(context);
-            context.imageGridViewAdapter = new ImageGridViewAdapter(context, context.listOfAllImages);
-            context.gridView.setAdapter(context.imageGridViewAdapter);
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mainActivity.loading_textView.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            mainActivity.loadImages();
             return null;
         }
-    }*/
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            mainActivity.gridView.setAdapter(mainActivity.imageGridViewAdapter);
+            mainActivity.loading_textView.setVisibility(View.GONE);
+        }
+    }
+
 
 
 
     public void loadImages() {
-
-       listOfAllImages = GetImages.getListImages(this);
-       imageGridViewAdapter = new ImageGridViewAdapter(this, listOfAllImages);
-        gridView.setAdapter(imageGridViewAdapter);
+        listOfAllImages = GetImages.getListImages(this);
+        imageGridViewAdapter = new ImageGridViewAdapter(this, listOfAllImages);
+        //  gridView.setAdapter(imageGridViewAdapter);
     }
+
+
 
 
     public boolean hasCamera() {
         return getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
     }
+
+
 
 
     public void captureImg(View view) {
@@ -141,19 +158,46 @@ public class MainActivity extends AppCompatActivity {
         // Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
 
-
     }
 
-   /* @Override
-    protected void onResume() {
+
+
+    public class RefreshInBackground extends AsyncTask<Void, Void, Void> {
+
+        private MainActivity mainActivity;
+
+        public RefreshInBackground(MainActivity mainActivity) {
+            this.mainActivity = mainActivity;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mainActivity.loading_textView.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            mainActivity.refresh();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+         mainActivity.loading_textView.setVisibility(View.GONE);
+        }
+    }
+
+
+   public void refresh() {
         System.out.println("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
         listOfAllImages = GetImages.getListImages(this);
         imageGridViewAdapter.setImageList(listOfAllImages);
         imageGridViewAdapter.notifyDataSetChanged();
+        gridView.invalidate();
         System.out.println("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
-        super.onResume();
-
-    }*/
+    }
 
 
     @Override
@@ -196,8 +240,14 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            System.out.println("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
+            listOfAllImages = GetImages.getListImages(this);
+            imageGridViewAdapter.setImageList(listOfAllImages);
+            imageGridViewAdapter.notifyDataSetChanged();
+            gridView.invalidate();
+            System.out.println("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
 
-
+            new RefreshInBackground(this).execute();
         }
 
     }//onActivityResults Ends here
@@ -211,7 +261,8 @@ public class MainActivity extends AppCompatActivity {
 
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
-                loadImages();
+                // loadImages();
+                new GetListOfImgInBackground(this).execute();
             } else {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
