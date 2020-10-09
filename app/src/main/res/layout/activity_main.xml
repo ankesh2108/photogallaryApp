@@ -6,6 +6,16 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/loading_textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="Loading..."
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="18sp"
+        android:textAlignment="center"/>
+
     <GridView
         android:id="@+id/gridView"
         android:layout_width="fill_parent"
